@@ -8,16 +8,27 @@ const socket = io('http://localhost:3000', {
 
 function TicTacToe() {
     const [board, setBoard] = useState([])
+    const [gameOver, setGameOver] = useState(false)
+    const [result, setResult] = useState(null)
 
     useEffect(() => {
 
         socket.on('gameState', (game) => {
             setBoard(game.board);
+            setGameOver(game.gameOver)
+            setResult(game.result)
         });
     }, []);
 
     function makeMove(index) {
-        socket.emit('makeMove', index)
+        if(!gameOver){
+            socket.emit('makeMove', index)
+
+        }
+    }
+
+    function resetGame(){
+        socket.emit('resetGame')
     }
 
 
@@ -37,6 +48,14 @@ function TicTacToe() {
                         </button>
                     ))}
                 </div>
+               {gameOver && (
+                <div>
+                    <div>{result}</div>
+                    <button onClick={resetGame} className='mt-4 p-2 bg-blue-500 text-white rounded-md'>
+                        Reset Game
+                    </button>
+                </div>
+               )}
             </div>
         </div>
 
