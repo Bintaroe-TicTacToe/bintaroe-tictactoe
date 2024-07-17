@@ -10,15 +10,12 @@ const socket = io("http://localhost:3000", {
 function TicTacToe() {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
-
   const { theme, setTheme } = useContext(ThemeContext);
-  console.log(theme);
-
   const [board, setBoard] = useState([]);
   const [gameOver, setGameOver] = useState(false);
   const [result, setResult] = useState(null);
-
-  // useEffect(() => {}, []);
+  const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     socket.emit("request:gamestate");
@@ -34,9 +31,13 @@ function TicTacToe() {
     socket.on("users:online", (users) => {
       setUsers(users);
     });
+    socket.on("receiveMessage", (msg) => {
+      setMessages((prevMessages) => [...prevMessages, msg]);
+    });
 
     return () => {
       socket.off("users:online");
+      socket.off("receiveMessage");
     };
   }, []);
 
@@ -53,7 +54,15 @@ function TicTacToe() {
   function handleLogout() {
     localStorage.clear();
     navigate("/");
-    socket.emit("disconnet");
+    // socket.emit("disconnect");
+    socket.disconnect()
+  }
+
+  function sendMessage() {
+    if (message.trim()) {
+      socket.emit("sendMessage", message);
+      setMessage("");
+    }
   }
 
   return (
@@ -75,18 +84,16 @@ function TicTacToe() {
         </button>
       </div>
 
-      <div className="flex space-x-4 justify-center mt-10">
+      <div className="flex justify-center mt-10 space-x-4">
         <div className="bg-slate-100 px-4 py-2 rounded-lg">
-          <h3>Player online:</h3>
+          <h3>Players online:</h3>
           <ul>
-            {users.map((e, index) => {
-              return (
-                <li key={index} className="flex space-x-2 items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="font-semibold">{e.username}</span>
-                </li>
-              );
-            })}
+            {users.map((e, index) => (
+              <li key={index} className="flex space-x-2 items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="font-semibold">{e.username}</span>
+              </li>
+            ))}
           </ul>
         </div>
         <div className="p-4 bg-sky-300 w-fit rounded-lg">
@@ -100,6 +107,29 @@ function TicTacToe() {
                 {cell}
               </button>
             ))}
+          </div>
+        </div>
+        <div className="bg-slate-100 rounded-md w-80 px-4 py-2 flex flex-col">
+          <div className="flex flex-col h-64 overflow-y-auto p-4 border rounded-md mb-4">
+            {messages.map((msg, index) => (
+              <div key={index} className="my-2">
+                <strong>{msg.user}</strong>: {msg.text}
+              </div>
+            ))}
+          </div>
+          <div className="flex">
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="flex-1 p-2 border rounded-md"
+            />
+            <button
+              onClick={sendMessage}
+              className="ml-2 px-4 py-2 bg-blue-400 hover:bg-blue-500 text-white rounded-md"
+            >
+              Send
+            </button>
           </div>
         </div>
       </div>
