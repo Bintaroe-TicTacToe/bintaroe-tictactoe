@@ -51,12 +51,6 @@ io.on("connection", (socket) => {
     io.emit("users:online", users);
   });
 
-  // socket.on("logout", () => {
-  //   users = users.filter((e) => e.id !== socket.id);
-  //   io.emit("users:online", users);
-  // });
-
-  // console.log(game)
   socket.on("request:gamestate", () => {
     if (game) {
       game.players.push(socket.id);
@@ -69,7 +63,6 @@ io.on("connection", (socket) => {
         gameOver: false,
         result: null,
       };
-      // console.log(game.board)
       io.emit("gameState", game);
     }
   });
@@ -79,8 +72,8 @@ io.on("connection", (socket) => {
       game.board[index] = game.currentPlayer === 0 ? "X" : "O";
       const result = checkResult(game.board);
       if (result) {
-        (game.gameOver = true), (game.result = result);
-        console.log(result);
+        game.gameOver = true;
+        game.result = result;
       } else {
         game.currentPlayer = game.currentPlayer === 0 ? 1 : 0;
       }
@@ -100,7 +93,9 @@ io.on("connection", (socket) => {
     io.emit("gameState", game);
   });
 
-  socket.on("disconnect", () => {});
+  socket.on("chat:message", (message) => {
+    io.emit("chat:message", message);
+  });
 });
 
 io.listen(3000);

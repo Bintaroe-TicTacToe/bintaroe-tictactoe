@@ -10,6 +10,8 @@ const socket = io("http://localhost:3000", {
 function TicTacToe() {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState("");
 
   const { theme, setTheme } = useContext(ThemeContext);
   console.log(theme);
@@ -18,8 +20,6 @@ function TicTacToe() {
   const [gameOver, setGameOver] = useState(false);
   const [result, setResult] = useState(null);
 
-  // useEffect(() => {}, []);
-
   useEffect(() => {
     socket.emit("request:gamestate");
     socket.on("gameState", (game) => {
@@ -27,16 +27,23 @@ function TicTacToe() {
       setGameOver(game.gameOver);
       setResult(game.result);
     });
+
     socket.auth = {
       username: localStorage.username,
     };
     socket.disconnect().connect();
+
     socket.on("users:online", (users) => {
       setUsers(users);
     });
 
+    socket.on("chat:message", (message) => {
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
+
     return () => {
       socket.off("users:online");
+      socket.off("chat:message");
     };
   }, []);
 
@@ -52,8 +59,18 @@ function TicTacToe() {
 
   function handleLogout() {
     localStorage.clear();
+    socket.disconnect();
     navigate("/");
-    socket.emit("disconnet");
+  }
+
+  function handleSendMessage() {
+    if (message.trim()) {
+      socket.emit("chat:message", {
+        username: localStorage.username,
+        content: message,
+      });
+      setMessage("");
+    }
   }
 
   return (
@@ -79,14 +96,12 @@ function TicTacToe() {
         <div className="bg-slate-100 px-4 py-2 rounded-lg">
           <h3>Player online:</h3>
           <ul>
-            {users.map((e, index) => {
-              return (
-                <li key={index} className="flex space-x-2 items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="font-semibold">{e.username}</span>
-                </li>
-              );
-            })}
+            {users.map((e, index) => (
+              <li key={index} className="flex space-x-2 items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="font-semibold">{e.username}</span>
+              </li>
+            ))}
           </ul>
         </div>
         <div className="p-4 bg-sky-300 w-fit rounded-lg">
@@ -115,6 +130,31 @@ function TicTacToe() {
           </button>
         </div>
       )}
+
+      <div className="bg-white p-4 mt-4 rounded-lg">
+        <h3>Chat</h3>
+        <div className="h-64 overflow-y-scroll border border-gray-300 p-2">
+          {messages.map((msg, index) => (
+            <div key={index} className="mb-2">
+              <strong>{msg.username}:</strong> {msg.content}
+            </div>
+          ))}
+        </div>
+        <div className="flex mt-2">
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="flex-1 p-2 border border-gray-300 rounded-l-md"
+          />
+          <button
+            onClick={handleSendMessage}
+            className="p-2 bg-blue-400 hover:bg-blue-500 text-white rounded-r-md"
+          >
+            Send
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
