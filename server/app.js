@@ -70,6 +70,17 @@ io.on("connection", (socket) => {
     }
   })
 
+  socket.on("resetGame", () => {
+    game = {
+      players: [],
+      board: [null, null, null, null, null, null, null, null, null],
+      currentPlayer: 0,
+      gameOver: false,
+      result: null
+    }
+    io.emit('gameState', game)
+  })
+
   socket.on('disconnect', () => {
 
   });
