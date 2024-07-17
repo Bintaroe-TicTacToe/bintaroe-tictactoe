@@ -48,15 +48,11 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     users = users.filter((e) => e.id !== socket.id);
+    console.log(users)
     io.emit("users:online", users);
   });
 
-  // socket.on("logout", () => {
-  //   users = users.filter((e) => e.id !== socket.id);
-  //   io.emit("users:online", users);
-  // });
 
-  // console.log(game)
   socket.on("request:gamestate", () => {
     if (game) {
       game.players.push(socket.id);
