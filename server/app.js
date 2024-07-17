@@ -42,8 +42,27 @@ io.on("connection", (socket) => {
     gameOver: false,
     winner: null
   };
-  console.log(game.board)
-  io.emit('gameState', game)
+  // console.log(game.board)
+  socket.emit('gameState', game)
+
+
+
+  socket.on("makeMove", (index) => {
+    game.board[index] = (game.currentPlayer === 0) ? "X" : "O"
+    const winner = checkWinner(game.board)
+    if (winner) {
+      game.gameOver = true,
+        game.winner = winner
+        console.log("winner is", (game.currentPlayer === 0) ? "X" : "O")
+    }
+    else {
+      console.log("from", game.currentPlayer)
+      game.currentPlayer = (game.currentPlayer === 0) ? 1 : 0;
+      console.log("to", game.currentPlayer)
+    }
+
+    socket.emit('gameState', game)
+  })
 });
 
 io.listen(3000);
