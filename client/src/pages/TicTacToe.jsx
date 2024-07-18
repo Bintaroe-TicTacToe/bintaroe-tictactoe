@@ -2,9 +2,11 @@ import { useState, useEffect, useContext } from "react";
 import io from "socket.io-client";
 import ThemeContext from "../context";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
-const socket = io("http://localhost:3000", {
-  withCredentials: true,
+const socket = io("https://tictactoe.raframa.my.id", {
+  // withCredentials: true,
+  "Access-Control-Allow-Origin": "*"
 });
 
 function TicTacToe() {
@@ -16,6 +18,7 @@ function TicTacToe() {
   const [result, setResult] = useState(null);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
+
 
   useEffect(() => {
     socket.emit("request:gamestate");
@@ -30,21 +33,30 @@ function TicTacToe() {
     socket.disconnect().connect();
     socket.on("users:online", (users) => {
       setUsers(users);
+      console.log(users ,"<======users")
     });
+    socket.on("tooManyPlayers", msg => {
+      toast.error(msg);
+      navigate(`/`);
+    });
+
+  
     socket.on("receiveMessage", (msg) => {
       setMessages((prevMessages) => [...prevMessages, msg]);
     });
-
+  
     return () => {
       socket.off("users:online");
       socket.off("receiveMessage");
+      socket.off("tooManyPlayers");
+
     };
   }, []);
 
   function makeMove(index) {
     if (!gameOver) {
       socket.emit("makeMove", index);
-    }
+    } 
   }
 
   function resetGame() {
@@ -66,19 +78,19 @@ function TicTacToe() {
   }
 
   return (
-    <div className={`bg-${theme}-200 min-h-screen`}>
+    <div className={`bg-gray-${theme} min-h-screen`}>
       <div className="flex justify-between items-center py-2.5 px-4 border-b">
         <button
           onClick={() => {
-            setTheme(theme === "slate" ? "lime" : "slate");
+            setTheme(theme === "100" ? "800" : "100");
           }}
-          className="px-2 py-1 rounded-md bg-blue-400 hover:bg-blue-500"
+          className="px-2 py-1 rounded-md bg-blue-400 hover:bg-blue-500 text-white"
         >
-          Theme {theme === "slate" ? "green" : "slate"}
+          Theme {theme === "red" ? "green" : "red"}
         </button>
         <button
           onClick={handleLogout}
-          className="px-2 py-1 rounded-md bg-blue-400 hover:bg-blue-500"
+          className="px-2 py-1 rounded-md bg-blue-400 hover:bg-blue-500 text-white"
         >
           Logout
         </button>
