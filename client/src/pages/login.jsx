@@ -1,17 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import io from "socket.io-client";
+
+const socket = io("https://tictactoe.raframa.my.id", {
+  // withCredentials: true,
+  "Access-Control-Allow-Origin": "*"
+});
 
 function Login() {
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
+
 
   const handleSubmit = (event) => {
     event.preventDefault();
     if (username) {
       localStorage.setItem("username", username);
       navigate("/tictactoe");
+
     } else {
-      alert("Please enter a username.");
+      toast.error("Please enter a username.");
     }
   };
 
@@ -47,3 +56,5 @@ function Login() {
 }
 
 export default Login;
+
+
