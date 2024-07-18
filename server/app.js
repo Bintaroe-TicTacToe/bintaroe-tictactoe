@@ -14,7 +14,7 @@ function checkResult(board) {
     [6, 7, 8], // horizontal
     [0, 3, 6],
     [1, 4, 7],
-    [2, 5, 8], // vertikal
+    [2, 5, 8], // vertical
     [0, 4, 8],
     [2, 4, 6], // diagonal
   ];
@@ -38,6 +38,7 @@ function checkResult(board) {
 
 let game = null;
 let users = [];
+let messages = []; // Store chat messages
 
 io.on("connection", (socket) => {
   if (socket.handshake.auth.username) {
@@ -51,12 +52,6 @@ io.on("connection", (socket) => {
     io.emit("users:online", users);
   });
 
-  // socket.on("logout", () => {
-  //   users = users.filter((e) => e.id !== socket.id);
-  //   io.emit("users:online", users);
-  // });
-
-  // console.log(game)
   socket.on("request:gamestate", () => {
     if (game) {
       game.players.push(socket.id);
@@ -69,7 +64,6 @@ io.on("connection", (socket) => {
         gameOver: false,
         result: null,
       };
-      // console.log(game.board)
       io.emit("gameState", game);
     }
   });
@@ -79,8 +73,8 @@ io.on("connection", (socket) => {
       game.board[index] = game.currentPlayer === 0 ? "X" : "O";
       const result = checkResult(game.board);
       if (result) {
-        (game.gameOver = true), (game.result = result);
-        console.log(result);
+        game.gameOver = true;
+        game.result = result;
       } else {
         game.currentPlayer = game.currentPlayer === 0 ? 1 : 0;
       }
@@ -98,6 +92,12 @@ io.on("connection", (socket) => {
       result: null,
     };
     io.emit("gameState", game);
+  });
+
+  socket.on("sendMessage", (message) => {
+    const msg = { user: socket.handshake.auth.username, text: message };
+    messages.push(msg);
+    io.emit("receiveMessage", msg);
   });
 
   socket.on("disconnect", () => {});
