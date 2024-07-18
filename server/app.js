@@ -41,11 +41,28 @@ let users = [];
 let messages = []; // Store chat messages
 
 io.on("connection", (socket) => {
+
+  // if (socket.handshake.auth.username && users.length <=2) {
+  //   users.push({ id: socket.id, username: socket.handshake.auth.username });
+  //   io.emit("users:online", users);
+  // }else if (socket.handshake.auth.username && users.length > 2){
+  //   socket.emit("tooManyPlayers", "There are already 2 players in the game. Please try again later.")
+  // }
+
   if (socket.handshake.auth.username) {
-    users.push({ id: socket.id, username: socket.handshake.auth.username });
+    if (users.length < 2) {
+      console.log("masuk sini")
+      users.push({ id: socket.id, username: socket.handshake.auth.username });
+      io.emit("users:online", users);
+      socket.emit("joinedGame");
+    } else {
+      console.log("masuk yang ini")
+      socket.emit("tooManyPlayers", "There are already 2 players in the game. Please try again later.");
+    }
   }
 
-  io.emit("users:online", users);
+
+
 
   socket.on("disconnect", () => {
     users = users.filter((e) => e.id !== socket.id);
